@@ -18,6 +18,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const verifyForm = document.getElementById("verify-form");
   if (verifyForm) verifyForm.addEventListener("submit", handleVerificationSubmit);
 
+  const createUserForm = document.getElementById("create-user-form");
+  if (createUserForm) createUserForm.addEventListener("submit", handleCreateUser);
+
   const progressForm = document.getElementById("progress-form");
   if (progressForm) progressForm.addEventListener("submit", handleStaffProgress);
 
@@ -190,6 +193,8 @@ async function handleComplaintSubmission(e) {
   }
 }
 
+
+
 /* -------------------------
 /* -------------------------
    Load complaints (user or admin)
@@ -203,9 +208,13 @@ async function loadComplaints() {
     container.innerHTML = "";
     (data.data || []).forEach(c => {
       const div = document.createElement("div");
+      const assigneeInfo = c.assignee ? `
+      <div class="mt-2 pt-2 border-top">
+        <p class="small mb-0"><strong>Assigned To:</strong> ${c.assignee.first_name || ''} ${c.assignee.last_name || ''}</p>
+      </div>
+      ` : "";
       div.className = "complaint-card p-3 mb-2 border rounded";
-
-      const userInfo = c.users ? `<p class="text-muted small">User: ${c.users.first_name} ${c.users.last_name} — ${c.users.phone_number || ""} / ${c.users.email || ""}</p>` : "";
+      const userInfo = c.creator ? `<p class="text-muted small">User: ${c.creator.first_name} ${c.creator.last_name} — ${c.creator.phone_number || ""} / ${c.creator.email || ""}</p>` : "";
       const statusClass = mapStatusClass(c.status);
       const statusPill = `<span class="status-pill ${statusClass}"><i class="bi bi-circle"></i> ${escapeHtml(c.status || "Open")}</span>`;
 
@@ -229,6 +238,7 @@ async function loadComplaints() {
         <p><strong>City:</strong> ${escapeHtml(c.city||"")} <strong>Pincode:</strong> ${escapeHtml(c.pincode||"")}</p>
         <div>${complaintImgsHTML}</div>
         ${workImgsHTML}
+        ${assigneeInfo}
       `;
 
       // if admin page, add update button
@@ -268,8 +278,40 @@ async function loadComplaints() {
   }
 }
 
-// Add these new functions anywhere in main.js
 
+async function handleCreateUser(e) {
+  e.preventDefault();
+  const form = e.target;
+  const first_name = form.querySelector('[name="first_name"]').value.trim();
+  const email = form.querySelector('[name="email"]').value.trim().toLowerCase();
+  const password = form.querySelector('[name="password"]').value;
+  const user_role = form.querySelector('[name="user_role"]').value;
+
+  if (!first_name || !email || !password) {
+    return showError("create-user-error", "All fields are required.");
+  }
+  if (password.length < 6) {
+    return showError("create-user-error", "Password must be at least 6 characters.");
+  }
+
+  try {
+    const resp = await fetch("/admin/create_user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ first_name, email, password, user_role }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      showToast(data.message, "success");
+      form.reset();
+      loadStaffIntoAdminDropdown(); // Refresh the staff list in the other form
+    } else {
+      showError("create-user-error", data.message || "Failed to create user.");
+    }
+  } catch (err) {
+    showError("create-user-error", "A network error occurred.");
+  }
+}
 function showFeedbackModal(complaintId) {
   const modalBody = document.getElementById('genericModalBody');
   modalBody.innerHTML = `
@@ -344,7 +386,7 @@ async function loadStaffIntoAdminDropdown() {
       data.data.forEach(staff => {
         const option = document.createElement("option");
         option.value = staff.id;
-        option.textContent = `${staff.first_name || ''} ${staff.last_name || ''} (${staff.id.substring(0,8)}...)`;
+        option.textContent = `[${staff.short_id}] ${staff.first_name || ''} ${staff.last_name || ''}`;
         selectEl.appendChild(option);
       });
     }

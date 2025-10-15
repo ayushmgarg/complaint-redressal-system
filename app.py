@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from supabase import create_client
 from datetime import timedelta
 from dotenv import load_dotenv
-
+import random
 
 # -----------------------------
 # Configuration (read from env)
@@ -317,7 +317,12 @@ def get_complaints():
 
     if session.get("user_type") == "admin":
         try:
-            res = supabase.table("complaints").select("*, users:users(id,first_name,last_name,email,phone_number)").order("created_at", desc=True).execute()
+            select_query = """
+                *,
+                creator:user_id(id, first_name, last_name, email, phone_number),
+                assignee:assigned_to(id, first_name, last_name)
+            """
+            res = supabase.table("complaints").select(select_query).order("created_at", desc=True).execute()
             data_out = getattr(res, "data", None) or (res.get("data") if isinstance(res, dict) else None)
             return jsonify({"success": True, "data": data_out})
         except Exception:
@@ -325,14 +330,12 @@ def get_complaints():
             return jsonify({"success": False, "message": "Internal error"}), 500
     else:
         try:
-            # Include work_images in select
-            res = supabase.table("complaints").select("*, work_images, complaint_images").eq("user_id", session.get("user_id")).order("created_at", desc=True).execute()
-            data_out = getattr(res, "data", None) or (res.get("data") if isinstance(res, dict) else None)
+            res = supabase.table("complaints").select(select_query).eq("user_id", session.get("user_id")).order("created_at", desc=True).execute()
+            data_out = getattr(res, "data", [])
             return jsonify({"success": True, "data": data_out})
-        except Exception:
-            app.logger.exception("Failed to list user's complaints")
+        except Exception as e:
+            app.logger.exception("Failed to list user's complaints: " + str(e))
             return jsonify({"success": False, "message": "Internal error"}), 500
-
 
 @app.route("/admin/create_user", methods=["POST"])
 def admin_create_user():
@@ -344,6 +347,17 @@ def admin_create_user():
     password = data.get("password") or ""
     role = data.get("user_role") or "staff"
     first_name = data.get("first_name") or "Staff"
+
+    short_id = generate_unique_short_id()
+
+    pw_hash = generate_password_hash(password)
+    payload = {
+        "email": email,
+        "password_hash": pw_hash,
+        "first_name": first_name,
+        "user_role": role,
+        "short_id": short_id 
+    }
 
     if not email or not password or role not in ["staff", "verifier"]:
         return jsonify({"success": False, "message": "Invalid input provided."}), 400
@@ -375,7 +389,7 @@ def get_staff():
         return jsonify({"success": False, "message": "Not authorized"}), 403
     
     try:
-        res = supabase.table("users").select("id, first_name, last_name").eq("user_role", "staff").execute()
+        res = supabase.table("users").select("id, first_name, last_name, short_id").eq("user_role", "staff").execute()
         staff_list = getattr(res, "data", [])
         return jsonify({"success": True, "data": staff_list})
     except Exception as e:
@@ -598,6 +612,21 @@ def create_admin(email: str, password: str, name: str = None):
     except Exception:
         app.logger.exception("Failed to create admin")
         return None
+
+#-----------------------------
+#id: 4 digit random  for field staff and verifier
+#-----------------------------
+def generate_unique_short_id():
+    """Generates a 4-digit ID and ensures it's unique in the users table."""
+    while True:
+        short_id = str(random.randint(1000, 9999))
+        try:
+            res = supabase.table("users").select("id").eq("short_id", short_id).limit(1).execute()
+            if not getattr(res, "data", None):
+                return short_id # It's unique
+        except Exception:
+            # If the query fails, it's safer to just generate a new one
+            pass
 
 
 # -----------------------------
