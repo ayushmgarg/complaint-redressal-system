@@ -20,21 +20,30 @@
       <h3 class="h6">Update complaint</h3>
       <form id="update-form" enctype="multipart/form-data" aria-label="Update complaint">
         <input type="hidden" name="complaint_id" value="" />
+        
         <div class="mb-3">
           <label class="form-label" for="status">Status</label>
           <select class="form-select" name="status" id="status">
             <option value="Open">Open</option>
+            <option value="Verified">Verified</option>
             <option value="Assigned">Assigned</option>
             <option value="In Progress">In Progress</option>
             <option value="Resolved">Resolved</option>
             <option value="Closed">Closed</option>
+            <option value="Rejected">Rejected</option>
           </select>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label" for="assigned_to">Assign to Staff (User ID)</label>
+          <input class="form-control" name="assigned_to" id="assigned_to" type="text" placeholder="Enter staff user UUID" />
         </div>
         
         <div class="mb-3">
           <label class="form-label" for="work_images">Work images (optional)</label>
           <input class="form-control" name="work_images" id="work_images" type="file" accept="image/*" multiple />
         </div>
+    
         <p id="update-error" class="text-danger small visually-hidden" aria-live="polite"></p>
         <button class="btn btn-primary" type="submit">Update</button>
       </form>
