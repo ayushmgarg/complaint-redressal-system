@@ -1,6 +1,8 @@
 // static/js/main.js
 document.addEventListener("DOMContentLoaded", () => {
   // Forms
+  
+
   const regForm = document.getElementById("registration-form");
   if (regForm) regForm.addEventListener("submit", handleRegistration);
 
@@ -23,6 +25,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const path = window.location.pathname;
   if (path.includes("/user") || path.includes("/admin")) {
     loadComplaints();
+    loadStaffIntoAdminDropdown(); 
+
   }
   if (path.includes("/verifier")) {
     loadVerifierComplaints();
@@ -249,10 +253,103 @@ async function loadComplaints() {
         div.appendChild(btnRow);
       }
 
+      if ((c.status === 'Resolved' || c.status === 'Closed') && !window.location.pathname.includes("/admin")) {
+        const feedbackBtn = document.createElement("button");
+        feedbackBtn.textContent = "Provide Feedback";
+        feedbackBtn.className = "btn btn-sm btn-success mt-2";
+        feedbackBtn.onclick = () => showFeedbackModal(c.id);
+        div.appendChild(feedbackBtn);
+    }
+
       container.appendChild(div);
     });
   } catch (err) {
     console.error("Error loading complaints:", err);
+  }
+}
+
+// Add these new functions anywhere in main.js
+
+function showFeedbackModal(complaintId) {
+  const modalBody = document.getElementById('genericModalBody');
+  modalBody.innerHTML = `
+    <form id="feedback-form">
+      <input type="hidden" name="complaint_id" value="${complaintId}">
+      <div class="mb-3">
+        <label for="rating" class="form-label">Rating (1-5)</label>
+        <select class="form-select" name="rating" id="rating" required>
+          <option value="">Choose a rating</option>
+          <option value="5">5 - Excellent</option>
+          <option value="4">4 - Good</option>
+          <option value="3">3 - Average</option>
+          <option value="2">2 - Poor</option>
+          <option value="1">1 - Very Poor</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="comments" class="form-label">Comments</label>
+        <textarea class="form-control" name="comments" id="comments" rows="3"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit Feedback</button>
+      <p id="feedback-error" class="text-danger small mt-2"></p>
+    </form>
+  `;
+
+  // Attach submit event listener
+  modalBody.querySelector('#feedback-form').addEventListener('submit', handleFeedbackSubmit);
+  
+  // Show the modal
+  const modal = new bootstrap.Modal(document.getElementById('genericModal'));
+  document.getElementById('genericModalLabel').textContent = 'Submit Your Feedback';
+  modal.show();
+}
+
+async function handleFeedbackSubmit(e) {
+  e.preventDefault();
+  const form = e.target;
+  const complaint_id = form.querySelector('[name="complaint_id"]').value;
+  const rating = form.querySelector('[name="rating"]').value;
+  const comments = form.querySelector('[name="comments"]').value;
+
+  if (!rating) {
+    document.getElementById('feedback-error').textContent = 'Please select a rating.';
+    return;
+  }
+
+  try {
+    const resp = await fetch('/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ complaint_id, rating, comments })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      showToast('Thank you for your feedback!', 'success');
+      bootstrap.Modal.getInstance(document.getElementById('genericModal')).hide();
+    } else {
+      document.getElementById('feedback-error').textContent = data.message || 'Submission failed.';
+    }
+  } catch (err) {
+    document.getElementById('feedback-error').textContent = 'A network error occurred.';
+  }
+}
+
+async function loadStaffIntoAdminDropdown() {
+  try {
+    const resp = await fetch("/api/get_staff");
+    const data = await resp.json();
+    if (data.success) {
+      const selectEl = document.getElementById("assigned_to");
+      selectEl.innerHTML = '<option value="">-- Select Staff --</option>'; // Clear existing
+      data.data.forEach(staff => {
+        const option = document.createElement("option");
+        option.value = staff.id;
+        option.textContent = `${staff.first_name || ''} ${staff.last_name || ''} (${staff.id.substring(0,8)}...)`;
+        selectEl.appendChild(option);
+      });
+    }
+  } catch (err) {
+    console.error("Failed to load staff list:", err);
   }
 }
 

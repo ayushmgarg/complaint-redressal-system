@@ -36,7 +36,9 @@
         
         <div class="mb-3">
           <label class="form-label" for="assigned_to">Assign to Staff (User ID)</label>
-          <input class="form-control" name="assigned_to" id="assigned_to" type="text" placeholder="Enter staff user UUID" />
+          <select class="form-select" name="assigned_to" id="assigned_to">
+            <option value="">-- Select Staff --</option>
+            </select>
         </div>
         
         <div class="mb-3">
@@ -47,6 +49,30 @@
         <p id="update-error" class="text-danger small visually-hidden" aria-live="polite"></p>
         <button class="btn btn-primary" type="submit">Update</button>
       </form>
+      <h3 class="h6">Create a New Staff/Verifier</h3>
+        <form id="create-user-form" aria-label="Create new user">
+            <div class="mb-3">
+                <label class="form-label" for="first_name">First Name</label>
+                <input class="form-control" name="first_name" id="first_name" type="text" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="email">Email</label>
+                <input class="form-control" name="email" id="email" type="email" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="password">Temporary Password</label>
+                <input class="form-control" name="password" id="password" type="password" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="user_role">Role</label>
+                <select class="form-select" name="user_role" id="user_role">
+                    <option value="staff" selected>Staff</option>
+                    <option value="verifier">Verifier</option>
+                </select>
+            </div>
+            <p id="create-user-error" class="text-danger small visually-hidden" aria-live="polite"></p>
+            <button class="btn btn-secondary" type="submit">Create User</button>
+        </form>
     </div>
   </div>
 </div>

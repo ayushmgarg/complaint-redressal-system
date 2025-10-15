@@ -334,6 +334,53 @@ def get_complaints():
             return jsonify({"success": False, "message": "Internal error"}), 500
 
 
+@app.route("/admin/create_user", methods=["POST"])
+def admin_create_user():
+    if not ensure_admin_logged_in():
+        return jsonify({"success": False, "message": "Not authorized"}), 403
+
+    data = request.get_json()
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+    role = data.get("user_role") or "staff"
+    first_name = data.get("first_name") or "Staff"
+
+    if not email or not password or role not in ["staff", "verifier"]:
+        return jsonify({"success": False, "message": "Invalid input provided."}), 400
+
+    # Check if user already exists
+    exist_q = supabase.table("users").select("id").eq("email", email).limit(1).execute()
+    if getattr(exist_q, "data", None):
+        return jsonify({"success": False, "message": "User with this email already exists."}), 409
+
+    pw_hash = generate_password_hash(password)
+    payload = {
+        "email": email,
+        "password_hash": pw_hash,
+        "first_name": first_name,
+        "user_role": role
+    }
+
+    try:
+        supabase.table("users").insert(payload).execute()
+        return jsonify({"success": True, "message": f"{role.capitalize()} created successfully."})
+    except Exception as e:
+        app.logger.exception("Admin failed to create user")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.route("/api/get_staff")
+def get_staff():
+    if not ensure_admin_logged_in():
+        return jsonify({"success": False, "message": "Not authorized"}), 403
+    
+    try:
+        res = supabase.table("users").select("id, first_name, last_name").eq("user_role", "staff").execute()
+        staff_list = getattr(res, "data", [])
+        return jsonify({"success": True, "data": staff_list})
+    except Exception as e:
+        app.logger.exception("Failed to get staff list")
+        return jsonify({"success": False, "message": str(e)}), 500
 
 @app.route("/verifier_complaints", methods=["GET"])  
 def verifier_complaints():
@@ -384,6 +431,15 @@ def verify_complaint():
         app.logger.exception("Failed to verify complaint")
         return jsonify({"success": False, "message": "Internal error"}), 500
 
+def create_notification(user_id, complaint_id, message):
+    try:
+        supabase.table("notifications").insert({
+            "user_id": user_id,
+            "type": "STATUS_UPDATE",
+            "payload": {"complaint_id": complaint_id, "message": message}
+        }).execute()
+    except Exception as e:
+        app.logger.error(f"Failed to create notification: {e}")
 
 @app.route("/staff_update", methods=["POST"])  
 def staff_update():
@@ -405,6 +461,13 @@ def staff_update():
                 app.logger.exception("Failed uploading work image")
     try:
         update_payload = {}
+        complaint_q = supabase.table("complaints").select("user_id, title").eq("id", complaint_id).limit(1).execute()
+        complaint_data = getattr(complaint_q, "data", [])
+        if complaint_data:
+            user_to_notify = complaint_data[0]['user_id']
+            complaint_title = complaint_data[0]['title']
+            message = f"Your complaint '{complaint_title[:20]}...' has been updated to '{status}'."
+            create_notification(user_to_notify, complaint_id, message)
         if status:
             update_payload["status"] = status
         if public_urls:
@@ -418,6 +481,7 @@ def staff_update():
             "complaint_id": complaint_id,
             "status": status or "In Progress",
             "created_by": session.get("user_id")
+        
         }).execute()
         return jsonify({"success": True})
     except Exception:
@@ -455,11 +519,19 @@ def update_complaint():
         update_payload["assigned_to"] = assigned_to
     if public_urls:
         try:
+            supabase.table("complaints").update(update_payload).eq("id", complaint_id).execute()
+            if assigned_to:
+                supabase.table("staff_assignments").insert({
+                    "complaint_id": complaint_id,
+                    "staff_id": assigned_to,
+                    "assigned_by": session.get("user_id") # Log which admin did it
+                }).execute()
             cur = supabase.table("complaints").select("work_images").eq("id", complaint_id).limit(1).execute()
             cur_data = getattr(cur, "data", None) or (cur.get("data") if isinstance(cur, dict) else None)
             existing = cur_data[0].get("work_images") if cur_data and len(cur_data) > 0 else []
             new_images = (existing or []) + public_urls
             update_payload["work_images"] = new_images
+            
         except Exception:
             app.logger.exception("Failed to fetch existing work_images")
             update_payload["work_images"] = public_urls
