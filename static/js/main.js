@@ -139,8 +139,15 @@ async function handleLogin(e) {
     const data = await resp.json();
     if (data.success) {
       showToast("Logged in", "success");
-      if (data.user_type === "admin") window.location.href = "/admin";
-      else window.location.href = "/user";
+      if (data.user_type === "admin") {
+        window.location.href = "/admin";
+      } else if (data.user_type === "staff") {
+        window.location.href = "/staff";
+      } else if (data.user_type === "verifier") {
+        window.location.href = "/verifier";
+      } else {
+        window.location.href = "/user";
+      }      
     } else {
       showError("login-error", data.message || "Login failed");
     }
@@ -209,12 +216,19 @@ async function loadComplaints() {
     (data.data || []).forEach(c => {
       const div = document.createElement("div");
       const assigneeInfo = c.assignee ? `
-      <div class="mt-2 pt-2 border-top">
-        <p class="small mb-0"><strong>Assigned To:</strong> ${c.assignee.first_name || ''} ${c.assignee.last_name || ''}</p>
-      </div>
-      ` : "";
+        <p class="small mb-0 mt-2">
+            <strong>Assigned To:</strong> [${c.assignee.short_id}] ${c.assignee.first_name || ''} ${c.assignee.last_name || ''}
+        </p>` : "";
       div.className = "complaint-card p-3 mb-2 border rounded";
-      const userInfo = c.creator ? `<p class="text-muted small">User: ${c.creator.first_name} ${c.creator.last_name} — ${c.creator.phone_number || ""} / ${c.creator.email || ""}</p>` : "";
+      let userInfo = '';
+      if (window.location.pathname.includes("/admin") && c.creator) {
+          userInfo = `
+              <div class="small text-muted p-2 bg-light rounded mt-2">
+                  <strong>Submitted by:</strong> ${c.creator.first_name} ${c.creator.last_name}<br>
+                  <strong>Contact:</strong> ${c.creator.email}
+              </div>`;
+      }
+      
       const statusClass = mapStatusClass(c.status);
       const statusPill = `<span class="status-pill ${statusClass}"><i class="bi bi-circle"></i> ${escapeHtml(c.status || "Open")}</span>`;
 
@@ -232,14 +246,16 @@ async function loadComplaints() {
       ` : "";
 
       div.innerHTML = `
-        <h3>${escapeHtml(c.title || "Untitled")}</h3>
-        <div class="d-flex align-items-center justify-content-between">${userInfo}<div>${statusPill}</div></div>
-        <p>${escapeHtml(c.description || "")}</p>
-        <p><strong>City:</strong> ${escapeHtml(c.city||"")} <strong>Pincode:</strong> ${escapeHtml(c.pincode||"")}</p>
+        <div class="d-flex justify-content-between align-items-start">
+            <h3 class="mb-1">${escapeHtml(c.title || "Untitled")}</h3>
+            ${statusPill}
+        </div>
+        <p class="mb-2">${escapeHtml(c.description || "")}</p>
+        <p class="small"><strong>Location:</strong> ${escapeHtml(c.city||"")}, ${escapeHtml(c.pincode||"")}</p>
         <div>${complaintImgsHTML}</div>
         ${workImgsHTML}
         ${assigneeInfo}
-      `;
+        ${userInfo}  `;
 
       // if admin page, add update button
       if (window.location.pathname.includes("/admin")) {

@@ -314,14 +314,14 @@ def submit_complaint():
 def get_complaints():
     if not ("user_id" in session):
         return jsonify({"success": False, "message": "Not authenticated"}), 401
-
-    if session.get("user_type") == "admin":
-        try:
-            select_query = """
+    select_query = """
                 *,
                 creator:user_id(id, first_name, last_name, email, phone_number),
                 assignee:assigned_to(id, first_name, last_name)
             """
+    if session.get("user_type") == "admin":
+        try:
+            
             res = supabase.table("complaints").select(select_query).order("created_at", desc=True).execute()
             data_out = getattr(res, "data", None) or (res.get("data") if isinstance(res, dict) else None)
             return jsonify({"success": True, "data": data_out})
@@ -401,11 +401,12 @@ def verifier_complaints():
     if not ensure_verifier_logged_in():
         return jsonify({"success": False, "message": "Not authenticated"}), 401
     try:
-        res = supabase.table("complaints").select("*, users:users(id,first_name,last_name,email,phone_number)").in_("status", ["Open"]).order("created_at", desc=True).execute()
-        data_out = getattr(res, "data", None) or (res.get("data") if isinstance(res, dict) else None)
+        # FIX: Fetch complaints with status 'Resolved' for verification
+        res = supabase.table("complaints").select("*, users:user_id(first_name,last_name)").in_("status", ["Resolved"]).order("updated_at", desc=True).execute()
+        data_out = getattr(res, "data", [])
         return jsonify({"success": True, "data": data_out})
-    except Exception:
-        app.logger.exception("Failed to list verifier complaints")
+    except Exception as e:
+        app.logger.exception("Failed to list verifier complaints: " + str(e))
         return jsonify({"success": False, "message": "Internal error"}), 500
 
 
@@ -426,23 +427,38 @@ def staff_complaints():
 def verify_complaint():
     if not ensure_verifier_logged_in():
         return jsonify({"success": False, "message": "Not authorized"}), 403
-    complaint_id = request.json.get("complaint_id") if request.is_json else request.form.get("complaint_id")
-    verification_status = request.json.get("verification_status") if request.is_json else request.form.get("verification_status")
-    notes = request.json.get("verification_notes") if request.is_json else request.form.get("verification_notes")
-    if not complaint_id or verification_status not in ["Verified", "Rejected"]:
+    
+    data = request.get_json()
+    complaint_id = data.get("complaint_id")
+    new_status = data.get("verification_status")
+    notes = data.get("verification_notes")
+
+    if not complaint_id or new_status not in ["Closed", "In Progress"]:
         return jsonify({"success": False, "message": "Invalid input"}), 400
+    if new_status == "In Progress" and not notes:
+        return jsonify({"success": False, "message": "Notes are required to send a complaint back."}), 400
+
     try:
-        new_status = "Verified" if verification_status == "Verified" else "Rejected"
+        # Update the complaint status
         supabase.table("complaints").update({"status": new_status}).eq("id", complaint_id).execute()
+        # Log this action
         supabase.table("complaint_status_logs").insert({
-            "complaint_id": complaint_id,
-            "status": new_status,
-            "notes": notes,
-            "created_by": session.get("user_id")
+            "complaint_id": complaint_id, "status": new_status,
+            "notes": notes, "created_by": session.get("user_id")
         }).execute()
+
+        # Notify the original user
+        complaint_q = supabase.table("complaints").select("user_id, title").eq("id", complaint_id).limit(1).execute()
+        complaint_data = getattr(complaint_q, "data", [])
+        if complaint_data:
+            user_to_notify = complaint_data[0]['user_id']
+            title = complaint_data[0]['title']
+            message = f"Your complaint '{title[:20]}...' has been verified and '{new_status}'."
+            create_notification(user_to_notify, complaint_id, message)
+        
         return jsonify({"success": True})
-    except Exception:
-        app.logger.exception("Failed to verify complaint")
+    except Exception as e:
+        app.logger.exception("Failed to verify complaint: " + str(e))
         return jsonify({"success": False, "message": "Internal error"}), 500
 
 def create_notification(user_id, complaint_id, message):

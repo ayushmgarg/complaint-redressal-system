@@ -18,22 +18,22 @@
   <div class="col-12 col-lg-5">
     <div class="card p-3">
       <h3 class="h6">Verification</h3>
-      <form id="verify-form" aria-label="Verify complaint">
-        <input type="hidden" name="complaint_id" value="" />
-        <div class="mb-3">
-          <label class="form-label" for="verification_status">Verification status</label>
-          <select class="form-select" id="verification_status" name="verification_status">
-            <option value="Verified">Verified</option>
-            <option value="Rejected">Rejected</option>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="verification_notes">Notes</label>
-          <textarea class="form-control" id="verification_notes" name="verification_notes"></textarea>
-        </div>
-        <p id="verify-error" class="text-danger small visually-hidden" aria-live="polite"></p>
-        <button class="btn btn-primary" type="submit">Submit verification</button>
-      </form>
+        <form id="verify-form" aria-label="Verify complaint resolution">
+          <input type="hidden" name="complaint_id" value="" />
+          <div class="mb-3">
+            <label class="form-label" for="verification_status">Verification Action</label>
+            <select class="form-select" id="verification_status" name="verification_status">
+              <option value="Closed">Approve and Close Complaint</option>
+              <option value="In Progress">Reject and Send Back to Staff</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="verification_notes">Notes (Required for rejection)</label>
+            <textarea class="form-control" id="verification_notes" name="verification_notes"></textarea>
+          </div>
+          <p id="verify-error" class="text-danger small visually-hidden" aria-live="polite"></p>
+          <button class="btn btn-primary" type="submit">Submit Verification</button>
+        </form>
     </div>
   </div>
 </div>
