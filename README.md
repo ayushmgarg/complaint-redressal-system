@@ -1,6 +1,6 @@
 # Complaint Redressal System
 
-A comprehensive web-based complaint management system built with Flask and Supabase, designed to streamline the process of filing, tracking, and resolving public complaints.
+A comprehensive web-based complaint management system built with Supabase, designed to streamline the process of filing, tracking, and resolving public complaints. Now there won't be any more turning a deaf ear to your precious grievances.
 
 ## 🚀 Features
 
