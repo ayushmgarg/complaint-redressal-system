@@ -1,0 +1,42 @@
+{% extends "_base.html" %}
+{% block title %}Register — Complaint Portal{% endblock %}
+{% block content %}
+<div class="row g-4 align-items-start">
+  <div class="col-12 col-lg-7">
+    <div class="card p-3">
+      <h2 class="h4 mb-3">Create account</h2>
+      <form id="registration-form" method="post" action="{{ url_for('register') }}" novalidate>
+        <div class="mb-3">
+          <label class="form-label" for="first_name">First name *</label>
+          <input class="form-control" name="first_name" id="first_name" type="text" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="last_name">Last name</label>
+          <input class="form-control" name="last_name" id="last_name" type="text" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="aadhar_card">Aadhar card (12 digits) *</label>
+          <input class="form-control" name="aadhar_card" id="aadhar_card" type="text" inputmode="numeric" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="email">Email *</label>
+          <input class="form-control" name="email" id="email" type="email" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="phone_number">Phone number (10 digits) *</label>
+          <input class="form-control" name="phone_number" id="phone_number" type="tel" inputmode="numeric" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="password">Password (min 6 chars) *</label>
+          <input class="form-control" name="password" id="password" type="password" minlength="6" required />
+        </div>
+        <p id="register-error" class="text-danger small visually-hidden" aria-live="polite"></p>
+        <button type="submit" class="btn btn-primary">Register</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-12 col-lg-5">
+    
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "_base.html" %}
+{% block title %}Login – Complaint Portal{% endblock %}
+{% block content %}
+<div class="row g-4 align-items-start">
+  <div class="col-12 col-lg-5">
+    <div class="card p-4">
+      <div class="text-center mb-3">
+        <span class="flag-badge mb-2">🇮🇳</span>
+        <h2 class="h4 mb-2">Welcome Back</h2>
+        <p class="text-muted small">Login to access your dashboard</p>
+      </div>
+      
+      <form id="login-form" aria-label="Login form">
+        <div class="mb-3">
+          <label class="form-label" for="login_email">Email Address</label>
+          <input class="form-control" id="login_email" name="email" type="email" placeholder="you@example.com" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="login_password">Password</label>
+          <input class="form-control" id="login_password" name="password" type="password" placeholder="Enter your password" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="login_type">Login as</label>
+          <select class="form-select" id="login_type" name="login_type" aria-label="Login as">
+            <option value="user" selected>Citizen (User)</option>
+            <option value="admin">Admin</option>
+            <option value="verifier">Verifier</option>
+            <option value="staff">Staff Member</option>
+          </select>
+          <small class="text-muted">Select your role to access the appropriate dashboard</small>
+        </div>
+        <p id="login-error" class="text-danger small visually-hidden" aria-live="polite"></p>
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-box-arrow-in-right me-2"></i>Login
+        </button>
+      </form>
+      
+      <hr class="my-3" />
+      
+      <div class="text-center">
+        <p class="text-muted small mb-2">Don't have an account?</p>
+        <a href="{{ url_for('register') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-person-plus me-1"></i> Register as Citizen
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-12 col-lg-7">
+    <div class="card p-4">
+      <h3 class="h5 mb-3">
+        <i class="bi bi-info-circle me-2" style="color: var(--accent-orange);"></i>
+        About Our Portal
+      </h3>
+      <p class="text-secondary mb-3">
+        Our Complaint Redressal System helps Indian citizens report issues and track their resolution efficiently.
+      </p>
+      
+      <div class="row g-3">
+        <div class="col-12">
+          <div class="d-flex align-items-start gap-3 p-3 bg-light rounded">
+            <i class="bi bi-person-circle text-success" style="font-size: 1.5rem;"></i>
+            <div>
+              <strong>Citizen (User)</strong>
+              <p class="small text-muted mb-0">Submit complaints, track status, upload images, and provide feedback.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-12">
+          <div class="d-flex align-items-start gap-3 p-3 bg-light rounded">
+            <i class="bi bi-shield-check text-primary" style="font-size: 1.5rem;"></i>
+            <div>
+              <strong>Verifier</strong>
+              <p class="small text-muted mb-0">Review and verify newly submitted complaints before assignment.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-12">
+          <div class="d-flex align-items-start gap-3 p-3 bg-light rounded">
+            <i class="bi bi-gear text-info" style="font-size: 1.5rem;"></i>
+            <div>
+              <strong>Admin</strong>
+              <p class="small text-muted mb-0">Assign complaints to staff, update status, and manage the entire system.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-12">
+          <div class="d-flex align-items-start gap-3 p-3 bg-light rounded">
+            <i class="bi bi-tools text-warning" style="font-size: 1.5rem;"></i>
+            <div>
+              <strong>Staff Member</strong>
+              <p class="small text-muted mb-0">Work on assigned complaints, upload progress images, and resolve issues.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

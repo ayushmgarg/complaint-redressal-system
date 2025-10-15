@@ -1,0 +1,57 @@
+{% extends "_base.html" %}
+{% block title %}Complaint Portal{% endblock %}
+{% block content %}
+<section class="hero-flag py-5 py-md-6">
+  <div class="hero-overlay p-4 p-md-5 rounded-4">
+    <div class="d-flex flex-column flex-lg-row align-items-center justify-content-between gap-4">
+      <div class="text-light">
+        <h1 class="display-6 fw-bold mb-2">Report. Track. Resolve.</h1>
+        <p class="mb-3">Simple complaint redressal tailored for India — now with a bold, dark theme.</p>
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-success" href="{{ url_for('index') }}"><i class="bi bi-box-arrow-in-right me-1"></i> Login</a>
+          <a class="btn btn-outline-light" href="{{ url_for('register') }}"><i class="bi bi-person-plus me-1"></i> Register</a>
+        </div>
+      </div>
+      <div class="text-center text-lg-end">
+        <span class="flag-badge">🇮🇳</span>
+      </div>
+    </div>
+  </div>
+}</section>
+
+<div class="row g-4 mt-2">
+  <div class="col-12 col-md-4">
+    <div class="card feature-card border-0">
+      <div class="d-flex align-items-center gap-3">
+        <i class="bi bi-clipboard-data text-success" style="font-size:28px;"></i>
+        <div>
+          <div class="fw-semibold">Easy submission</div>
+          <div class="text-muted small">Upload photos, add details, submit in seconds.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card feature-card border-0">
+      <div class="d-flex align-items-center gap-3">
+        <i class="bi bi-kanban text-info" style="font-size:28px;"></i>
+        <div>
+          <div class="fw-semibold">Status tracking</div>
+          <div class="text-muted small">From Open to Resolved, always know.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card feature-card border-0">
+      <div class="d-flex align-items-center gap-3">
+        <i class="bi bi-bell text-warning" style="font-size:28px;"></i>
+        <div>
+          <div class="fw-semibold">Smart notifications</div>
+          <div class="text-muted small">Get timely updates and reminders.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "_base.html" %}
+{% block title %}User Dashboard — Complaint Portal{% endblock %}
+{% block content %}
+
+<div class="row g-4 align-items-start">
+  <div class="col-12 col-lg-5">
+    <div class="card p-3">
+      <h2 class="h5">Submit a complaint</h2>
+      <form id="complaint-form" enctype="multipart/form-data" aria-label="Submit complaint">
+        <div class="mb-3">
+          <label class="form-label" for="title">Title *</label>
+          <input class="form-control" id="title" name="title" type="text" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="description">Description *</label>
+          <textarea class="form-control" id="description" name="description" minlength="10" required></textarea>
+        </div>
+        <div class="row">
+          <div class="col-12 col-sm-6 mb-3">
+            <label class="form-label" for="city">City *</label>
+            <input class="form-control" id="city" name="city" type="text" required />
+          </div>
+          <div class="col-12 col-sm-6 mb-3">
+            <label class="form-label" for="pincode">Pincode *</label>
+            <input class="form-control" id="pincode" name="pincode" type="text" inputmode="numeric" required />
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="landmark">Landmark</label>
+          <input class="form-control" id="landmark" name="landmark" type="text" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="complaint_images">Complaint images (multiple)</label>
+          <input class="form-control" id="complaint_images" name="complaint_images" type="file" accept="image/*" multiple />
+        </div>
+        <p id="complaint-error" class="text-danger small visually-hidden" aria-live="polite"></p>
+        <button class="btn btn-primary" type="submit">Submit complaint</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-12 col-lg-7">
+    <div class="card p-3">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <h2 class="h5 mb-0">Your complaints</h2>
+        <div class="text-muted small">Latest first</div>
+      </div>
+      <div id="complaints-container" aria-live="polite">
+        <div class="skeleton mb-2" style="height:40px"></div>
+        <div class="skeleton mb-2" style="height:40px"></div>
+        <div class="skeleton" style="height:40px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

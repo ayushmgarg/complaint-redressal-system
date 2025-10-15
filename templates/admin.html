@@ -1,0 +1,44 @@
+{% extends "_base.html" %}
+{% block title %}Admin Dashboard — Complaint Portal{% endblock %}
+{% block content %}
+<div class="row g-4 align-items-start">
+  <div class="col-12 col-lg-7">
+    <div class="card p-3">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <h2 class="h5 mb-0">All complaints</h2>
+        <div class="text-muted small">Manage, assign, and update</div>
+      </div>
+      <div id="complaints-container" aria-live="polite">
+        <div class="skeleton mb-2" style="height:40px"></div>
+        <div class="skeleton mb-2" style="height:40px"></div>
+        <div class="skeleton" style="height:40px"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-5">
+    <div class="card p-3">
+      <h3 class="h6">Update complaint</h3>
+      <form id="update-form" enctype="multipart/form-data" aria-label="Update complaint">
+        <input type="hidden" name="complaint_id" value="" />
+        <div class="mb-3">
+          <label class="form-label" for="status">Status</label>
+          <select class="form-select" name="status" id="status">
+            <option value="Open">Open</option>
+            <option value="Assigned">Assigned</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Resolved">Resolved</option>
+            <option value="Closed">Closed</option>
+          </select>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label" for="work_images">Work images (optional)</label>
+          <input class="form-control" name="work_images" id="work_images" type="file" accept="image/*" multiple />
+        </div>
+        <p id="update-error" class="text-danger small visually-hidden" aria-live="polite"></p>
+        <button class="btn btn-primary" type="submit">Update</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
