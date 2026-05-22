@@ -1,41 +1,86 @@
 {% extends "_base.html" %}
-{% block title %}Verifier Dashboard — Complaint Portal{% endblock %}
-{% block content %}
-<div class="row g-4 align-items-start">
-  <div class="col-12 col-lg-7">
-    <div class="card p-3">
-      <div class="d-flex align-items-center justify-content-between mb-2">
-        <h2 class="h5 mb-0">Complaints to verify</h2>
-        <div class="text-muted small">Review and verify</div>
-      </div>
-      <div id="complaints-container" aria-live="polite">
-        <div class="skeleton mb-2" style="height:40px"></div>
-        <div class="skeleton mb-2" style="height:40px"></div>
-        <div class="skeleton" style="height:40px"></div>
-      </div>
-    </div>
-  </div>
-  <div class="col-12 col-lg-5">
-    <div class="card p-3">
-      <h3 class="h6">Verification</h3>
-        <form id="verify-form" aria-label="Verify complaint resolution">
-          <input type="hidden" name="complaint_id" value="" />
-          <div class="mb-3">
-            <label class="form-label" for="verification_status">Verification Action</label>
-            <select class="form-select" id="verification_status" name="verification_status">
-              <option value="Closed">Approve and Close Complaint</option>
-              <option value="In Progress">Reject and Send Back to Staff</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="verification_notes">Notes (Required for rejection)</label>
-            <textarea class="form-control" id="verification_notes" name="verification_notes"></textarea>
-          </div>
-          <p id="verify-error" class="text-danger small visually-hidden" aria-live="polite"></p>
-          <button class="btn btn-primary" type="submit">Submit Verification</button>
-        </form>
-    </div>
-  </div>
-</div>
-{% endblock %}
+{% block title %}Verifier Dashboard — Mr. Civil{% endblock %}
+{% block meta_desc %}Review and verify newly submitted complaints before they are assigned to field staff.{% endblock %}
 
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div>
+        <h1>🔍 Verifier Dashboard</h1>
+        <p class="page-header-sub">Review open complaints and verify or reject them for processing.</p>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="loadVerifierComplaints()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-grid" style="max-width:500px;margin-bottom:1.5rem;">
+    <div class="stat-card saffron">
+      <div class="stat-card-icon">📋</div>
+      <div class="stat-card-value" id="verif-stat-pending">—</div>
+      <div class="stat-card-label">Awaiting Review</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-card-icon">✅</div>
+      <div class="stat-card-value" id="verif-stat-done">—</div>
+      <div class="stat-card-label">Verified Today</div>
+    </div>
+  </div>
+
+  <!-- Workflow info -->
+  <div style="background:#f0f4ff;border:1px solid #c7d2fe;border-radius:var(--radius);padding:0.875rem 1.125rem;margin-bottom:1.5rem;font-size:0.85rem;color:var(--navy);">
+    <strong>📋 Workflow:</strong> You review <strong>Open</strong> complaints submitted by citizens.
+    Approve → <span style="font-weight:600;color:#15803d;">Verified</span> (Admin will assign to staff) &nbsp;|&nbsp;
+    Reject → <span style="font-weight:600;color:#991b1b;">Rejected</span> (with reason sent to citizen).
+  </div>
+
+  <!-- Complaints list -->
+  <div id="complaints-container">
+    <div class="skeleton" style="height:120px;margin-bottom:0.875rem;"></div>
+    <div class="skeleton" style="height:120px;margin-bottom:0.875rem;"></div>
+    <div class="skeleton" style="height:120px;"></div>
+  </div>
+
+  <!-- Inline verification panel (appears when a complaint is selected) -->
+  <div class="card hidden" id="verify-panel" style="position:sticky;bottom:1rem;z-index:100;border:2px solid var(--navy);max-width:600px;margin-top:1rem;">
+    <div class="card-header" style="background:var(--navy);color:var(--white);">
+      <h2 style="color:var(--white);">🔍 Review Selected Complaint</h2>
+      <button class="modal-close" style="color:rgba(255,255,255,0.7);" onclick="closeVerifyPanel()">✕</button>
+    </div>
+    <div class="card-body">
+      <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;">
+        Selected: <strong id="verify-selected-title">—</strong>
+      </p>
+      <form id="verify-form" novalidate>
+        <input type="hidden" name="complaint_id" id="verify-complaint-id" />
+        <div class="form-group">
+          <label class="form-label" for="verification_status">Action</label>
+          <select class="form-select" id="verification_status" name="verification_status">
+            <option value="Verified">✅ Verify — Forward for assignment</option>
+            <option value="Rejected">❌ Reject — Cannot be processed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="verification_notes">Notes
+            <span style="font-size:0.75rem;color:var(--text-muted);">(required when rejecting)</span>
+          </label>
+          <textarea class="form-control" id="verification_notes" name="verification_notes"
+                    placeholder="Add notes for the citizen…" style="min-height:80px;"></textarea>
+        </div>
+        <div class="error-msg" id="verify-error" aria-live="polite"></div>
+        <div style="display:flex;gap:0.75rem;">
+          <button type="submit" class="btn btn-primary" id="verify-submit-btn">Submit Decision</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeVerifyPanel()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div><!-- /container -->
+
+<script>
+function closeVerifyPanel() {
+  document.getElementById('verify-panel').classList.add('hidden');
+}
+</script>
+{% endblock %}

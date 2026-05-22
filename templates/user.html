@@ -1,56 +1,166 @@
 {% extends "_base.html" %}
-{% block title %}User Dashboard — Complaint Portal{% endblock %}
+{% block title %}Citizen Dashboard — Mr. Civil{% endblock %}
+{% block meta_desc %}File and track public complaints. View status updates, rate staff, and escalate if needed.{% endblock %}
+
 {% block content %}
-
-<div class="row g-4 align-items-start">
-  <div class="col-12 col-lg-5">
-    <div class="card p-3">
-      <h2 class="h5">Submit a complaint</h2>
-      <form id="complaint-form" enctype="multipart/form-data" aria-label="Submit complaint">
-        <div class="mb-3">
-          <label class="form-label" for="title">Title *</label>
-          <input class="form-control" id="title" name="title" type="text" required />
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="description">Description *</label>
-          <textarea class="form-control" id="description" name="description" minlength="10" required></textarea>
-        </div>
-        <div class="row">
-          <div class="col-12 col-sm-6 mb-3">
-            <label class="form-label" for="city">City *</label>
-            <input class="form-control" id="city" name="city" type="text" required />
-          </div>
-          <div class="col-12 col-sm-6 mb-3">
-            <label class="form-label" for="pincode">Pincode *</label>
-            <input class="form-control" id="pincode" name="pincode" type="text" inputmode="numeric" required />
-          </div>
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="landmark">Landmark</label>
-          <input class="form-control" id="landmark" name="landmark" type="text" />
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="complaint_images">Complaint images (multiple)</label>
-          <input class="form-control" id="complaint_images" name="complaint_images" type="file" accept="image/*" multiple />
-        </div>
-        <p id="complaint-error" class="text-danger small visually-hidden" aria-live="polite"></p>
-        <button class="btn btn-primary" type="submit">Submit complaint</button>
-      </form>
+<div class="container">
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div>
+        <h1>👋 Welcome, <span id="user-greeting">Citizen</span></h1>
+        <p class="page-header-sub">File a new complaint or track your existing ones below.</p>
+      </div>
+      <button class="btn btn-saffron" onclick="switchTab('submit')" id="new-complaint-btn">
+        ➕ New Complaint
+      </button>
     </div>
   </div>
-  <div class="col-12 col-lg-7">
-    <div class="card p-3">
-      <div class="d-flex align-items-center justify-content-between mb-2">
-        <h2 class="h5 mb-0">Your complaints</h2>
-        <div class="text-muted small">Latest first</div>
-      </div>
-      <div id="complaints-container" aria-live="polite">
-        <div class="skeleton mb-2" style="height:40px"></div>
-        <div class="skeleton mb-2" style="height:40px"></div>
-        <div class="skeleton" style="height:40px"></div>
+
+  <!-- Stats -->
+  <div class="stats-grid" id="user-stats">
+    <div class="stat-card">
+      <div class="stat-card-icon">📋</div>
+      <div class="stat-card-value" id="stat-total">—</div>
+      <div class="stat-card-label">Total Complaints</div>
+    </div>
+    <div class="stat-card saffron">
+      <div class="stat-card-icon">🔓</div>
+      <div class="stat-card-value" id="stat-open">—</div>
+      <div class="stat-card-label">Open / In Progress</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-card-icon">✅</div>
+      <div class="stat-card-value" id="stat-closed">—</div>
+      <div class="stat-card-label">Resolved / Closed</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-card-icon">❌</div>
+      <div class="stat-card-value" id="stat-rejected">—</div>
+      <div class="stat-card-label">Rejected</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" role="tab" aria-selected="true"  id="tab-list-btn"   onclick="switchTab('list')">📋 My Complaints</button>
+    <button class="tab-btn"        role="tab" aria-selected="false" id="tab-submit-btn" onclick="switchTab('submit')">➕ Submit New</button>
+    <button class="tab-btn"        role="tab" aria-selected="false" id="tab-nearby-btn" onclick="switchTab('nearby')">📍 Nearby</button>
+  </div>
+
+  <!-- TAB: My Complaints -->
+  <div class="tab-pane active" id="tab-list">
+    <div id="complaints-container">
+      <div class="skeleton" style="height:100px;margin-bottom:0.875rem;"></div>
+      <div class="skeleton" style="height:100px;margin-bottom:0.875rem;"></div>
+      <div class="skeleton" style="height:100px;"></div>
+    </div>
+  </div>
+
+  <!-- TAB: Submit New Complaint -->
+  <div class="tab-pane" id="tab-submit">
+    <div style="max-width:640px;">
+      <div class="card">
+        <div class="card-header">
+          <h2>📋 File a New Complaint</h2>
+        </div>
+        <div class="card-body">
+          <form id="complaint-form" novalidate>
+            <div class="form-group">
+              <label class="form-label" for="title">Complaint Title *</label>
+              <input class="form-control" id="title" name="title" type="text"
+                     placeholder="e.g., Broken streetlight near Main Road" maxlength="120" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="description">Description *</label>
+              <textarea class="form-control" id="description" name="description"
+                        placeholder="Describe the issue in detail — what, where, when…"
+                        style="min-height:120px;"></textarea>
+              <p class="form-hint">Minimum 10 characters.</p>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="city">City *</label>
+                <input class="form-control" id="city" name="city" type="text" placeholder="Mumbai" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="pincode">Pincode *</label>
+                <input class="form-control" id="pincode" name="pincode" type="text"
+                       inputmode="numeric" maxlength="6" placeholder="400001" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="landmark">Landmark (optional)</label>
+              <input class="form-control" id="landmark" name="landmark" type="text"
+                     placeholder="Near the old post office" />
+            </div>
+
+            <!-- Drag-drop image upload -->
+            <div class="form-group">
+              <label class="form-label">Complaint Photos (optional)</label>
+              <div class="drop-zone" id="complaint-drop-zone" role="button" aria-label="Upload complaint photos">
+                <input type="file" id="complaint_images" name="complaint_images" accept="image/*" multiple />
+                <div class="drop-zone-icon">📸</div>
+                <p class="drop-zone-text">
+                  <strong onclick="document.getElementById('complaint_images').click()">Click to upload</strong>
+                  or drag &amp; drop images here
+                </p>
+                <p class="drop-zone-text" style="font-size:0.75rem;margin-top:0.25rem;">JPG, PNG, WEBP (max 5 per complaint)</p>
+              </div>
+              <div class="image-preview-row" id="complaint-preview-row"></div>
+            </div>
+
+            <div class="error-msg" id="complaint-error" aria-live="polite"></div>
+            <button type="submit" class="btn btn-primary btn-full btn-lg" id="complaint-submit-btn" style="margin-top:0.5rem;">
+              📨 Submit Complaint
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
+  <!-- TAB: Nearby Complaints -->
+  <div class="tab-pane" id="tab-nearby">
+    <div class="card">
+      <div class="card-header">
+        <h2>📍 Nearby Complaints</h2>
+        <span style="font-size:0.8rem;color:var(--text-muted);">Same area, last 30 days (anonymised)</span>
+      </div>
+      <div class="card-body">
+        <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1rem;">
+          Enter your pincode to see other complaints filed in the same area. This helps understand recurring issues.
+        </p>
+        <div style="display:flex;gap:0.75rem;margin-bottom:1.25rem;">
+          <input class="form-control" id="nearby-pincode" type="text" inputmode="numeric"
+                 maxlength="6" placeholder="Enter pincode…" style="max-width:180px;" />
+          <button class="btn btn-primary" onclick="loadNearbyComplaints()">Search</button>
+        </div>
+        <div id="nearby-container">
+          <div class="empty-state">
+            <div class="empty-state-icon">📍</div>
+            <h4>Enter a pincode to search</h4>
+            <p>See what issues others in your area have reported.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// Greet user
+fetch('/api/me').then(r=>r.json()).then(d=>{
+  if(d.success && d.first_name) document.getElementById('user-greeting').textContent = d.first_name;
+});
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('tab-' + name + '-btn').classList.add('active');
+  document.getElementById('tab-' + name + '-btn').setAttribute('aria-selected','true');
+  if (name === 'list') loadComplaints();
+}
+</script>
 {% endblock %}

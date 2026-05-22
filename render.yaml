@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: mr-civil-complaint-system
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 2 --timeout 120
+    plan: free
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: COMPLAINT_BUCKET
+        value: complaint-images
+      - key: WORK_BUCKET
+        value: work-images
+      - key: ESCALATION_EMAIL
+        sync: false
+      - key: ESCALATION_TWITTER_HANDLE
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0

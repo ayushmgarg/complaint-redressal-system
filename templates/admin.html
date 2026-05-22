@@ -1,80 +1,234 @@
 {% extends "_base.html" %}
-{% block title %}Admin Dashboard — Complaint Portal{% endblock %}
+{% block title %}Admin Dashboard — Mr. Civil{% endblock %}
+{% block meta_desc %}Admin control panel for Mr. Civil. Manage all complaints, assign to staff, create team accounts, view ratings.{% endblock %}
+
 {% block content %}
-<div class="row g-4 align-items-start">
-  <div class="col-12 col-lg-7">
-    <div class="card p-3">
-      <div class="d-flex align-items-center justify-content-between mb-2">
-        <h2 class="h5 mb-0">All complaints</h2>
-        <div class="text-muted small">Manage, assign, and update</div>
-      </div>
-      <div id="complaints-container" aria-live="polite">
-        <div class="skeleton mb-2" style="height:40px"></div>
-        <div class="skeleton mb-2" style="height:40px"></div>
-        <div class="skeleton" style="height:40px"></div>
+<div class="container">
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div>
+        <h1>⚙️ Admin Dashboard</h1>
+        <p class="page-header-sub">Manage all complaints, assign staff, and oversee the system.</p>
       </div>
     </div>
   </div>
-  <div class="col-12 col-lg-5">
-    <div class="card p-3">
-      <h3 class="h6">Update complaint</h3>
-      <form id="update-form" enctype="multipart/form-data" aria-label="Update complaint">
-        <input type="hidden" name="complaint_id" value="" />
-        
-        <div class="mb-3">
-          <label class="form-label" for="status">Status</label>
-          <select class="form-select" name="status" id="status">
-            <option value="Open">Open</option>
-            <option value="Verified">Verified</option>
-            <option value="Assigned">Assigned</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Resolved">Resolved</option>
-            <option value="Closed">Closed</option>
-            <option value="Rejected">Rejected</option>
-          </select>
-        </div>
-        
-        <div class="mb-3">
-          <label class="form-label" for="assigned_to">Assign to Staff (User ID)</label>
-          <select class="form-select" name="assigned_to" id="assigned_to">
-            <option value="">-- Select Staff --</option>
-            </select>
-        </div>
-        
-        <div class="mb-3">
-          <label class="form-label" for="work_images">Work images (optional)</label>
-          <input class="form-control" name="work_images" id="work_images" type="file" accept="image/*" multiple />
-        </div>
-    
-        <p id="update-error" class="text-danger small visually-hidden" aria-live="polite"></p>
-        <button class="btn btn-primary" type="submit">Update</button>
-      </form>
-      <br>
-      <h3 class="h6">Create a New Staff/Verifier</h3>
-        <form id="create-user-form" aria-label="Create new user">
-            <div class="mb-3">
-                <label class="form-label" for="first_name">First Name</label>
-                <input class="form-control" name="first_name" id="first_name" type="text" required />
-            </div>
-            <div class="mb-3">
-                <label class="form-label" for="email">Email</label>
-                <input class="form-control" name="email" id="email" type="email" required />
-            </div>
-            <div class="mb-3">
-                <label class="form-label" for="password">Password</label>
-                <input class="form-control" name="password" id="password" type="password" required />
-            </div>
-            <div class="mb-3">
-                <label class="form-label" for="user_role">Role</label>
-                <select class="form-select" name="user_role" id="user_role">
-                    <option value="staff" selected>Staff</option>
-                    <option value="verifier">Verifier</option>
-                </select>
-            </div>
-            <p id="create-user-error" class="text-danger small visually-hidden" aria-live="polite"></p>
-            <button class="btn btn-secondary" type="submit">Create User</button>
-        </form>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-card-icon">📋</div>
+      <div class="stat-card-value" id="admin-stat-total">—</div>
+      <div class="stat-card-label">Total Complaints</div>
+    </div>
+    <div class="stat-card saffron">
+      <div class="stat-card-icon">🔓</div>
+      <div class="stat-card-value" id="admin-stat-open">—</div>
+      <div class="stat-card-label">Open / Pending</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon">⚙️</div>
+      <div class="stat-card-value" id="admin-stat-progress">—</div>
+      <div class="stat-card-label">In Progress</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-card-icon">✅</div>
+      <div class="stat-card-value" id="admin-stat-closed">—</div>
+      <div class="stat-card-label">Resolved / Closed</div>
     </div>
   </div>
-</div>
+
+  <!-- Tabs -->
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" role="tab" id="tab-complaints-btn" onclick="adminTab('complaints')">📋 All Complaints</button>
+    <button class="tab-btn" role="tab" id="tab-assign-btn"     onclick="adminTab('assign')">🎯 Assign &amp; Update</button>
+    <button class="tab-btn" role="tab" id="tab-team-btn"       onclick="adminTab('team')">👥 Manage Team</button>
+    <button class="tab-btn" role="tab" id="tab-ratings-btn"    onclick="adminTab('ratings')">⭐ Staff Ratings</button>
+  </div>
+
+  <!-- TAB: All Complaints -->
+  <div class="tab-pane active" id="tab-complaints">
+    <div style="display:flex;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap;">
+      <div class="search-wrap" style="flex:1;min-width:200px;">
+        <span class="search-icon">🔍</span>
+        <input class="form-control search-input" id="admin-search" type="text"
+               placeholder="Search complaints…" oninput="filterAdminComplaints()" />
+      </div>
+      <select class="form-select" id="admin-filter-status" style="max-width:180px;" onchange="filterAdminComplaints()">
+        <option value="">All statuses</option>
+        <option value="Open">Open</option>
+        <option value="Verified">Verified</option>
+        <option value="Assigned">Assigned</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Resolved">Resolved</option>
+        <option value="Closed">Closed</option>
+        <option value="Rejected">Rejected</option>
+      </select>
+      <button class="btn btn-outline btn-sm" onclick="loadComplaints()">↻ Refresh</button>
+    </div>
+    <div id="complaints-container">
+      <div class="skeleton" style="height:100px;margin-bottom:0.875rem;"></div>
+      <div class="skeleton" style="height:100px;margin-bottom:0.875rem;"></div>
+      <div class="skeleton" style="height:100px;"></div>
+    </div>
+  </div>
+
+  <!-- TAB: Assign & Update -->
+  <div class="tab-pane" id="tab-assign">
+    <div style="max-width:540px;">
+      <div class="card">
+        <div class="card-header">
+          <h2>🎯 Update a Complaint</h2>
+        </div>
+        <div class="card-body">
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.25rem;">
+            Click <strong>"Edit"</strong> on any complaint in the All Complaints tab to pre-fill the complaint ID, or enter it manually.
+          </p>
+          <form id="update-form" novalidate>
+            <div class="form-group">
+              <label class="form-label" for="update-complaint-id">Complaint ID</label>
+              <input class="form-control" id="update-complaint-id" name="complaint_id" type="text"
+                     placeholder="Will be auto-filled when you click Edit on a complaint"
+                     readonly style="background:#f8fafc;font-size:0.8rem;" />
+              <input type="hidden" name="complaint_id" id="update-complaint-id-hidden" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="status">New Status</label>
+              <select class="form-select" name="status" id="status">
+                <option value="">— Keep current status —</option>
+                <option value="Open">Open</option>
+                <option value="Verified">Verified</option>
+                <option value="Assigned">Assigned</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Closed">Closed</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="assigned_to">Assign to Staff</label>
+              <select class="form-select" name="assigned_to" id="assigned_to">
+                <option value="">— No change / Select staff —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Work Images (optional)</label>
+              <div class="drop-zone" id="work-drop-zone">
+                <input type="file" id="work_images" name="work_images" accept="image/*" multiple />
+                <div class="drop-zone-icon">🖼</div>
+                <p class="drop-zone-text"><strong onclick="document.getElementById('work_images').click()">Click to upload</strong> work progress images</p>
+              </div>
+              <div class="image-preview-row" id="work-preview-row"></div>
+            </div>
+            <div class="error-msg" id="update-error" aria-live="polite"></div>
+            <div style="display:flex;gap:0.75rem;">
+              <button type="submit" class="btn btn-primary" id="update-submit-btn">✔ Update Complaint</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="clearUpdateForm()">✕ Clear</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Manage Team -->
+  <div class="tab-pane" id="tab-team">
+    <div style="max-width:540px;">
+      <div class="card" style="margin-bottom:1.5rem;">
+        <div class="card-header">
+          <h2>➕ Add Staff or Verifier</h2>
+        </div>
+        <div class="card-body">
+          <form id="create-user-form" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="new-first-name">First name *</label>
+                <input class="form-control" id="new-first-name" name="first_name" type="text" placeholder="Name" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="new-last-name">Last name</label>
+                <input class="form-control" id="new-last-name" name="last_name" type="text" placeholder="Surname" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="new-email">Email *</label>
+              <input class="form-control" id="new-email" name="email" type="email" placeholder="staff@example.com" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="new-password">Temporary Password *</label>
+              <input class="form-control" id="new-password" name="password" type="password"
+                     placeholder="Min 6 characters" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="new-user-role">Role *</label>
+              <select class="form-select" id="new-user-role" name="user_role">
+                <option value="staff">🔧 Staff Member</option>
+                <option value="verifier">🔍 Verifier</option>
+              </select>
+            </div>
+            <div class="error-msg" id="create-user-error" aria-live="polite"></div>
+            <button type="submit" class="btn btn-saffron" id="create-user-btn">Create Account</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Current team list -->
+      <div class="card">
+        <div class="card-header">
+          <h2>👥 Current Team</h2>
+          <button class="btn btn-outline btn-sm" onclick="loadTeamList()">↻ Refresh</button>
+        </div>
+        <div class="card-body" id="team-list-container">
+          <div class="empty-state">
+            <div class="empty-state-icon">👥</div>
+            <p>Loading team…</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Staff Ratings -->
+  <div class="tab-pane" id="tab-ratings">
+    <div class="card">
+      <div class="card-header">
+        <h2>⭐ Staff Performance Ratings</h2>
+        <button class="btn btn-outline btn-sm" onclick="loadStaffRatings()">↻ Refresh</button>
+      </div>
+      <div class="card-body" id="ratings-container">
+        <div class="empty-state">
+          <div class="empty-state-icon">⭐</div>
+          <h4>No ratings yet</h4>
+          <p>Citizens will rate staff after complaints are closed.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+function adminTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('tab-' + name + '-btn').classList.add('active');
+  if (name === 'complaints') loadComplaints();
+  if (name === 'assign') loadStaffIntoAdminDropdown();
+  if (name === 'team') loadTeamList();
+  if (name === 'ratings') loadStaffRatings();
+}
+
+function clearUpdateForm() {
+  const f = document.getElementById('update-form');
+  f.reset();
+  document.getElementById('update-complaint-id').value = '';
+  document.getElementById('update-complaint-id-hidden').value = '';
+  document.getElementById('work-preview-row').innerHTML = '';
+}
+
+// Sync display/hidden IDs
+document.getElementById('update-complaint-id').addEventListener('input', function() {
+  document.getElementById('update-complaint-id-hidden').value = this.value;
+});
+</script>
 {% endblock %}

@@ -1,42 +1,165 @@
 {% extends "_base.html" %}
-{% block title %}Register — Complaint Portal{% endblock %}
+{% block title %}Register — Mr. Civil Complaint Portal{% endblock %}
+{% block meta_desc %}Create your Mr. Civil citizen account to file and track public complaints in your area.{% endblock %}
+
 {% block content %}
-<div class="row g-4 align-items-start">
-  <div class="col-12 col-lg-7">
-    <div class="card p-3">
-      <h2 class="h4 mb-3">Create account</h2>
-      <form id="registration-form" method="post" action="{{ url_for('register') }}" novalidate>
-        <div class="mb-3">
-          <label class="form-label" for="first_name">First name *</label>
-          <input class="form-control" name="first_name" id="first_name" type="text" required />
+<div class="login-form-side" style="min-height:calc(100vh - 80px);display:flex;align-items:center;justify-content:center;padding:2rem 1.5rem;">
+  <div class="login-form-wrap" style="max-width:480px;">
+
+    <!-- Back link -->
+    <a href="{{ url_for('index') }}" class="btn btn-outline btn-sm" style="margin-bottom:1.5rem;">
+      ← Back to Login
+    </a>
+
+    <!-- Header -->
+    <div style="margin-bottom:1.75rem;">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+        <img src="{{ url_for('static', filename='img/mr_civil_logo.png') }}"
+             onerror="this.style.display='none'"
+             alt="Mr. Civil" style="height:40px;border-radius:50%;" />
+        <div>
+          <h1 style="font-size:1.5rem;font-weight:800;color:var(--text);margin:0;">Create Account</h1>
+          <p style="color:var(--text-muted);font-size:0.85rem;margin:0;">Citizen registration — free &amp; quick</p>
         </div>
-        <div class="mb-3">
-          <label class="form-label" for="last_name">Last name</label>
-          <input class="form-control" name="last_name" id="last_name" type="text" />
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="aadhar_card">Aadhar card (12 digits) *</label>
-          <input class="form-control" name="aadhar_card" id="aadhar_card" type="text" inputmode="numeric" required />
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="email">Email *</label>
-          <input class="form-control" name="email" id="email" type="email" required />
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="phone_number">Phone number (10 digits) *</label>
-          <input class="form-control" name="phone_number" id="phone_number" type="tel" inputmode="numeric" required />
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="password">Password (min 6 chars) *</label>
-          <input class="form-control" name="password" id="password" type="password" minlength="6" required />
-        </div>
-        <p id="register-error" class="text-danger small visually-hidden" aria-live="polite"></p>
-        <button type="submit" class="btn btn-primary">Register</button>
-      </form>
+      </div>
     </div>
-  </div>
-  <div class="col-12 col-lg-5">
-    
+
+    <!-- Step indicator -->
+    <div class="step-indicator" id="step-indicator" aria-label="Registration progress">
+      <div class="step active" id="step-1-ind">
+        <div class="step-circle">1</div>
+        <div class="step-label">Personal</div>
+      </div>
+      <div class="step" id="step-2-ind">
+        <div class="step-circle">2</div>
+        <div class="step-label">Contact</div>
+      </div>
+      <div class="step" id="step-3-ind">
+        <div class="step-circle">3</div>
+        <div class="step-label">Account</div>
+      </div>
+    </div>
+
+    <form id="registration-form" novalidate>
+
+      <!-- Step 1: Personal Info -->
+      <div id="reg-step-1" class="reg-step">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="first_name">First name *</label>
+            <input class="form-control" id="first_name" name="first_name" type="text"
+                   placeholder="Raj" autocomplete="given-name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="last_name">Last name</label>
+            <input class="form-control" id="last_name" name="last_name" type="text"
+                   placeholder="Kumar" autocomplete="family-name" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="aadhar_card">Aadhaar number *</label>
+          <input class="form-control" id="aadhar_card" name="aadhar_card" type="text"
+                 inputmode="numeric" maxlength="12" placeholder="12-digit Aadhaar number"
+                 autocomplete="off" />
+          <p class="form-hint">Your Aadhaar is stored securely and never shared publicly.</p>
+        </div>
+        <button type="button" class="btn btn-primary btn-full" onclick="regNextStep(1)">
+          Continue →
+        </button>
+      </div>
+
+      <!-- Step 2: Contact -->
+      <div id="reg-step-2" class="reg-step hidden">
+        <div class="form-group">
+          <label class="form-label" for="phone_number">Mobile number *</label>
+          <input class="form-control" id="phone_number" name="phone_number" type="tel"
+                 inputmode="numeric" maxlength="10" placeholder="10-digit mobile number"
+                 autocomplete="tel" />
+        </div>
+        <div style="display:flex;gap:0.75rem;margin-top:0.5rem;">
+          <button type="button" class="btn btn-outline" onclick="regPrevStep(2)">← Back</button>
+          <button type="button" class="btn btn-primary" style="flex:1;" onclick="regNextStep(2)">
+            Continue →
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Account -->
+      <div id="reg-step-3" class="reg-step hidden">
+        <div class="form-group">
+          <label class="form-label" for="email">Email address *</label>
+          <input class="form-control" id="email" name="email" type="email"
+                 placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="password">Password *</label>
+          <div style="position:relative;">
+            <input class="form-control" id="password" name="password" type="password"
+                   placeholder="At least 6 characters" autocomplete="new-password"
+                   style="padding-right:2.75rem;" />
+            <button type="button" onclick="togglePwd('password', this)"
+                    style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-muted);">
+              👁
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="password_confirm">Confirm password *</label>
+          <input class="form-control" id="password_confirm" name="password_confirm" type="password"
+                 placeholder="Re-enter your password" autocomplete="new-password" />
+        </div>
+
+        <div class="error-msg" id="register-error" aria-live="polite"></div>
+
+        <div style="display:flex;gap:0.75rem;margin-top:0.5rem;">
+          <button type="button" class="btn btn-outline" onclick="regPrevStep(3)">← Back</button>
+          <button type="submit" class="btn btn-saffron" style="flex:1;" id="reg-submit-btn">
+            🎉 Create Account
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <p style="text-align:center;font-size:0.8rem;color:var(--text-muted);margin-top:1.5rem;">
+      Already registered? <a href="{{ url_for('index') }}" style="color:var(--navy);font-weight:600;">Sign In</a>
+    </p>
   </div>
 </div>
+
+<script>
+function regNextStep(step) {
+  if (step === 1) {
+    const first = document.getElementById('first_name').value.trim();
+    const aadhar = document.getElementById('aadhar_card').value.replace(/\D/g,'');
+    if (!first) return showError('register-error', 'First name is required');
+    if (!/^\d{12}$/.test(aadhar)) return showError('register-error', 'Aadhaar must be 12 digits');
+    clearError('register-error');
+  } else if (step === 2) {
+    const phone = document.getElementById('phone_number').value.replace(/\D/g,'');
+    if (!/^\d{10}$/.test(phone)) return showError('register-error', 'Phone must be 10 digits');
+    clearError('register-error');
+  }
+  document.getElementById('reg-step-' + step).classList.add('hidden');
+  document.getElementById('reg-step-' + (step+1)).classList.remove('hidden');
+  document.getElementById('step-' + step + '-ind').classList.remove('active');
+  document.getElementById('step-' + step + '-ind').classList.add('done');
+  document.getElementById('step-' + (step+1) + '-ind').classList.add('active');
+}
+function regPrevStep(step) {
+  document.getElementById('reg-step-' + step).classList.add('hidden');
+  document.getElementById('reg-step-' + (step-1)).classList.remove('hidden');
+  document.getElementById('step-' + step + '-ind').classList.remove('active');
+  document.getElementById('step-' + (step-1) + '-ind').classList.remove('done');
+  document.getElementById('step-' + (step-1) + '-ind').classList.add('active');
+}
+function clearError(id) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = '';
+}
+function togglePwd(id, btn) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+</script>
 {% endblock %}
